@@ -1,0 +1,8 @@
+tensorboard
+easydict
+scikit-learn
+matplotlib
+pandas
+menpo
+prettytable
+mxnet==1.6.0
