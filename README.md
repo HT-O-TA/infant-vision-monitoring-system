@@ -1,42 +1,62 @@
-# 婴幼儿视觉识别与看护算法实验
+# 婴幼儿视觉识别与看护实验
 
-面向婴幼儿看护场景的计算机视觉实验项目，包含情绪识别、人体/手部姿态估计、目标检测、摔倒判断、目标跟踪和摄像头/小车控制。
+面向看护场景的视觉算法实践，包含情绪识别 API，以及姿态估计、目标检测、摔倒判断和跟踪实验代码。
 
-## 当前可运行内容
+## 当前主线
 
-- `app/`：当前可运行的 FastAPI 情绪识别服务
-- `core/`：从本地历史恢复的原始综合推理和模型代码
-- `track/`、`yolov8/`：历史跟踪和姿态实验记录
-
-## 目录说明
+`app/` 提供 FastAPI 图像情绪识别服务：
 
 ```text
-infant/
-├── app/                           # FastAPI 服务和可加载的情绪模型
-├── models/                        # 外部下载的模型权重
-├── core/                          # 恢复的历史算法源码
-├── track/                         # DeepSORT/跟踪实验
-├── yolov8/                        # YOLO 姿态实验
-└── README.md
+上传图像 → RGB 转换与缩放 → PyTorch 推理 → 情绪类别与置信度
 ```
 
-## 运行服务
+当前类别为 `positive` 与 `negative`。分类结果用于算法实验，不代表对儿童情绪或健康状态的专业判断。
 
-安装依赖：
+## 能力与代码范围
+
+| 路径 | 内容 |
+| --- | --- |
+| [app](app/) | 当前情绪识别 API 与模型定义 |
+| [models](models/) | 模型文件放置位置，权重需另行准备 |
+| [core](core/) | 综合推理与模型相关实验代码 |
+| [track](track/) | DeepSORT 等跟踪实验 |
+| [yolov8](yolov8/) | YOLO 与姿态相关实验 |
+| [experiments](experiments/) | 实验材料 |
+| [docs](docs/) | 补充说明 |
+
+姿态、摔倒、跟踪和控制脚本属于独立实验，不是已贯通的统一看护系统；部分历史依赖与权重未包含，不保证这些脚本直接运行。
+
+## 本地运行
 
 ```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-访问 `http://127.0.0.1:8000/docs`。健康检查为 `/health`，情绪识别接口为 `POST /api/v1/emotion`，字段名为 `file`。
+准备与模型定义匹配的权重，默认位置为：
 
-模型权重默认放在 `models/best_emotion_model.pt`，也可通过 `INFANT_EMOTION_MODEL` 指定路径。当前仓库不包含权重，服务在缺少权重时会启动为 `degraded` 状态，并返回清晰错误。
+```text
+models/best_emotion_model.pt
+```
 
-## 隐私说明
+也可通过环境变量 `INFANT_EMOTION_MODEL` 指定路径。缺少权重时健康状态为 `degraded`，识别接口返回503，不会返回伪造结果。
 
-本项目涉及人脸、婴幼儿图像和视频。公开仓库不包含原始人脸数据、摄像头录像、比赛交付包或个人信息材料。使用数据训练和演示时，请确认数据来源、授权和脱敏情况。
+## 接口
 
-## 项目状态
+| 接口 | 用途 |
+| --- | --- |
+| `GET /health` | 模型加载状态与计算设备 |
+| `POST /api/v1/emotion` | 图像情绪分类，上传字段为 `file` |
+| `GET /docs` | 交互式 API 文档 |
 
-这是一个算法实验和竞赛实践项目。当前可运行主线是情绪识别 API；姿态、摔倒和跟踪脚本保留用于追溯实验，但由于部分历史依赖和模型已丢失，不保证开箱即用。
+请求示例：
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/emotion \
+  -F "file=@sample.jpg"
+```
+
+## 数据与结果
+
+仓库不附带原始人脸数据、摄像头录像和模型权重。当前没有统一评测集上的准确率结论；使用授权的测试图像，并将单张预测与完整场景评测区分。
+
